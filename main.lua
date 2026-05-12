@@ -17,6 +17,9 @@ local GROUND_SCROLL_SPEED = 60
 
 local BACKGROUND_LOOPING_POINT = 413
 
+
+local bird
+
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
     background = love.graphics.newImage("background.png")
@@ -29,6 +32,7 @@ function love.load()
         resizable = true
     })
 
+    love.keyboard.keysPressed = {}
 
     bird = Bird()
 end
@@ -36,6 +40,10 @@ end
 function love.update(dt)
     backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
     groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % GAME_WIDTH
+
+    bird:update(dt)
+
+    love.keyboard.keysPressed = {}
 end
 
 function love.draw()
@@ -52,6 +60,8 @@ function love.draw()
 end
 
 function love.keypressed(key)
+    love.keyboard.keysPressed[key] = true
+
     if key == 'escape' then
         love.event.quit()
     end
@@ -60,4 +70,12 @@ end
 -- ################################################## --
 function love.resize(w, h)
     push:resize(w, h)
+end
+
+function love.keyboard.wasPressed(key)
+    if love.keyboard.keysPressed[key] then
+        return true
+    else
+        return false
+    end
 end
