@@ -1,4 +1,7 @@
 local push = require "push"
+Class = require "class"
+
+require "Bird"
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -25,6 +28,9 @@ function love.load()
         fullscreen = false,
         resizable = true
     })
+
+
+    bird = Bird()
 end
 
 function love.update(dt)
@@ -39,6 +45,8 @@ function love.draw()
 
     love.graphics.draw(background, -backgroundScroll, 0)
     love.graphics.draw(ground, -groundScroll, GAME_HEIGHT - 16)
+
+    bird:render()
 
     push:finish()
 end
