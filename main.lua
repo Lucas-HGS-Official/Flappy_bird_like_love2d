@@ -3,7 +3,12 @@ local push = require "push"
 
 require "Bird"
 require "Pipe"
-require 'PipePair'
+require "PipePair"
+
+require "StateMachine"
+require "states.BaseState"
+require "states.PlayState"
+require "states.TitleScreenState"
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -11,75 +16,52 @@ WINDOW_HEIGHT = 720
 GAME_WIDTH = 512
 GAME_HEIGHT = 288
 
-local backgroundScroll = 0
-local groundScroll = 0
-
 local BACKGROUND_SCROLL_SPEED = 30
 local GROUND_SCROLL_SPEED = 60
 
 local BACKGROUND_LOOPING_POINT = 413
+local GROUND_LOOPING_POINT = 514
 
-
-local pipePairs = {}
-local spawnTimer = 0
-local last_y = -PIPE_HEIGHT + math.random(80) + 20
-
-local bird
-
+local backgroundScroll = 0
+local groundScroll = 0
 local scrolling = true
+
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
     background = love.graphics.newImage("background.png")
     ground = love.graphics.newImage("ground.png")
 
-    love.window.setTitle("Flabby Avian")
+
+    small_font = love.graphics.newFont("font.ttf", 8)
+    medium_font = love.graphics.newFont("flappy.ttf", 14)
+    flappy_font = love.graphics.newFont("flappy.ttf", 28)
+    huge_font = love.graphics.newFont("flappy.ttf", 56)
+    love.graphics.setFont(flappy_font)
+
     push:setupScreen(GAME_WIDTH, GAME_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         vsync = -1,
         fullscreen = false,
         resizable = true
     })
+    love.window.setTitle("Flabby Avian")
+
+
+    game_state_machine = StateMachine {
+        ["title"] = function() return TitleScreenState() end,
+        ["play"] = function() return PlayState() end,
+    }
+    game_state_machine:change("title")
 
     love.keyboard.keysPressed = {}
-
-    bird = Bird()
 end
 
 function love.update(dt)
     if scrolling then
         backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
-        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % GAME_WIDTH
+        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % GROUND_LOOPING_POINT
 
-        spawnTimer = spawnTimer + dt
-        if spawnTimer > 2 then
-            local y = math.max(-PIPE_HEIGHT + 10, math.min(last_y + math.random(-20, 20), GAME_HEIGHT - 90 - PIPE_HEIGHT))
-            last_y = y
-
-            table.insert(pipePairs, PipePair(y))
-            spawnTimer = 0
-        end
-
-
-        for k, pair in pairs(pipePairs) do
-                    pair:update(dt)
-                    for l, pipe in pairs(pair.pipes) do
-                        if bird:collides(pipe) then
-                            scrolling = false
-                        end
-                    end
-
-                    if pair.x < -PIPE_WIDTH then
-                        pair.remove = true
-                    end
-                end
-
-                for k, pair in pairs(pipePairs) do
-                    if pair.remove then
-                        table.remove(pipePairs, k)
-                    end
-                end
-
-        bird:update(dt)
+        game_state_machine:update(dt)
     end
 
     love.keyboard.keysPressed = {}
@@ -90,15 +72,9 @@ function love.draw()
 
     love.graphics.clear(40 / 255, 60 / 255, 60 / 255, 1)
 
-    love.graphics.draw(background, -backgroundScroll, 0)
-
-    for k, pair in pairs(pipePairs) do
-        pair:render()
-    end
+    game_state_machine:render()
 
     love.graphics.draw(ground, -groundScroll, GAME_HEIGHT - 16)
-
-    bird:render()
 
     push:finish()
 end
@@ -106,7 +82,7 @@ end
 function love.keypressed(key)
     love.keyboard.keysPressed[key] = true
 
-    if key == 'escape' then
+    if key == "escape" then
         love.event.quit()
     end
 end
