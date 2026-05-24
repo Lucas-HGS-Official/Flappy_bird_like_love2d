@@ -10,6 +10,7 @@ require "states.BaseState"
 require "states.PlayState"
 require "states.TitleScreenState"
 require "states.ScoreState"
+require "states.CountdownState"
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -50,6 +51,7 @@ function love.load()
 
     game_state_machine = StateMachine {
         ["title"] = function() return TitleScreenState() end,
+        ["countdown"] = function() return CountdownState() end,
         ["play"] = function() return PlayState() end,
         ["score"] = function() return ScoreState() end
     }
