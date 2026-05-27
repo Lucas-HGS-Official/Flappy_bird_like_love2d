@@ -26,7 +26,7 @@ local GROUND_LOOPING_POINT = 514
 
 local backgroundScroll = 0
 local groundScroll = 0
-local scrolling = true
+scrolling = true
 
 
 function love.load()
@@ -40,6 +40,16 @@ function love.load()
     flappy_font = love.graphics.newFont("flappy.ttf", 28)
     huge_font = love.graphics.newFont("flappy.ttf", 56)
     love.graphics.setFont(flappy_font)
+
+    game_sounds = {
+        ["jump"] = love.audio.newSource("jump.wav", "static"),
+        ["explosion"] = love.audio.newSource("explosion.wav", "static"),
+        ["hurt"] = love.audio.newSource("hurt.wav", "static"),
+        ["score"] = love.audio.newSource("score.wav", "static"),
+
+        -- https://freesound.org/people/xsgianni/sounds/388079/
+        ["music"] = love.audio.newSource("marios_way.mp3", "static")
+    }
 
     push:setupScreen(GAME_WIDTH, GAME_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         vsync = -1,
@@ -57,7 +67,11 @@ function love.load()
     }
     game_state_machine:change("title")
 
+    game_sounds["music"]:setLooping(true)
+    game_sounds["music"]:play()
+
     love.keyboard.keysPressed = {}
+    love.mouse.buttonsPressed = {}
 end
 
 function love.update(dt)
@@ -69,6 +83,7 @@ function love.update(dt)
     end
 
     love.keyboard.keysPressed = {}
+    love.mouse.buttonsPressed = {}
 end
 
 function love.draw()
@@ -83,6 +98,7 @@ function love.draw()
     push:finish()
 end
 
+-- ################################################## --
 function love.keypressed(key)
     love.keyboard.keysPressed[key] = true
 
@@ -91,15 +107,22 @@ function love.keypressed(key)
     end
 end
 
--- ################################################## --
-function love.resize(w, h)
-    push:resize(w, h)
-end
-
 function love.keyboard.wasPressed(key)
     if love.keyboard.keysPressed[key] then
         return true
     else
         return false
     end
+end
+
+function love.mousepressed(x, y, button)
+    love.mouse.buttonsPressed[button] = true
+end
+
+function love.mouse.wasPressed(button)
+    return love.mouse.buttonsPressed[button]
+end
+
+function love.resize(w, h)
+    push:resize(w, h)
 end
